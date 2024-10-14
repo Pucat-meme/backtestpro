@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Backtesting App</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .logo {
+            font-size: 2.5em;
+            font-weight: bold;
+            background: linear-gradient(to right, #ff00ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: none;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: linear-gradient(to right, #ff00ff, #00ffff);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: opacity 0.3s;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+        #toggleForm, #importExcel {
+            margin-left: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .win-row {
+            background-color: rgba(0, 255, 0, 0.1);
+        }
+        .loss-row {
+            background-color: rgba(255, 0, 0, 0.1);
+        }
+        .charts-container {
+            display: flex;
+            margin-top: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .charts-left {
+            width: 70%;
+            padding: 20px;
+            border-right: 1px solid #e0e0e0;
+        }
+        .chart-wrapper {
+            margin-bottom: 20px;
+            width: 100%;
+            height: 300px;
+        }
+        .summary-card {
+            width: 30%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background-color: #f9f9f9;
+        }
+        .summary-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .summary-content {
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #444;
+        }
+        .summary-stats {
+            margin-top: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .summary-stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.9em;
+        }
+        .summary-stat-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .summary-stat-value {
+            color: #333;
+        }
+        .edit-buttons {
+            display: flex;
+            justify-content: space-around;
+        }
+        .edit-icon, .delete-icon {
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+        }
+        .save-button {
+            background: linear-gradient(to right, #4CAF50, #45a049);
+            display: none;
+        }
+        .editable {
+            background-color: transparent;
+            border: none;
+            padding: 2px;
+        }
+        .editing {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="logo">SONE BACKTESTING APP</h1>
+            <div>
+                <button id="toggleForm">Add New Trade</button>
+                <button id="importExcel">Import Excel</button>
+                <input type="file" id="excelFile" accept=".xlsx, .xls" style="display: none;">
+            </div>
+        </div>
+        
+        <div class="form-container">
+            <form id="tradeForm">
+                <div class="form-group">
+                    <label for="date">Date:</label>
+                    <input type="date" id="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="time">Time:</label>
+                    <input type="time" id="time" required>
+                </div>
+                <div class="form-group">
+                    <label for="timezone">Timezone:</label>
+                    <input type="text" id="timezone" required>
+                </div>
+                <div class="form-group">
+                    <label for="instrument">Instrument:</label>
+                    <input type="text" id="instrument" required>
+                </div>
+                <div class="form-group">
+                    <label for="result">Result:</label>
+                    <select id="result" required>
+                        <option value="win">Win</option>
+                        <option value="loss">Loss</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="profit">Profit/Loss:</label>
+                    <input type="number" id="profit" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="notes">Notes:</label>
+                    <input type="text" id="notes">
+                </div>
+                <button type="submit">Add Trade</button>
+            </form>
+        </div>
+
+        <table id="tradeTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Timezone</th>
+                    <th>Instrument</th>
+                    <th>Result</th>
+                    <th>Profit/Loss</th>
+                    <th>Notes</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        
+        <div class="charts-container">
+            <div class="charts-left">
+                <div class="chart-wrapper">
+                    <canvas id="winRateChart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="winRatePieChart"></canvas>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-title">Trade Summary</div>
+                <div class="summary-content" id="tradeSummary"></div>
+                <div class="summary-stats" id="summaryStats"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let trades = JSON.parse(localStorage.getItem('trades')) || [];
+        const tradeForm = document.getElementById('tradeForm');
+        const tradeTable = document.getElementById('tradeTable').getElementsByTagName('tbody')[0];
+        const winRateCtx = document.getElementById('winRateChart').getContext('2d');
+        const winRatePieCtx = document.getElementById('winRatePieChart').getContext('2d');
+        const toggleFormButton = document.getElementById('toggleForm');
+        const formContainer = document.querySelector('.form-container');
+        const importExcelButton = document.getElementById('importExcel');
+        const excelFileInput = document.getElementById('excelFile');
+
+        let winRateChart = new Chart(winRateCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Win Rate',
+                    data: [],
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Win Rate (%)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Trade Number'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Win Rate Over Time'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Win Rate: ${context.parsed.y.toFixed(2)}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        let winRatePieChart = new Chart(winRatePieCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Wins', 'Losses'],
+                datasets: [{
+                    data: [0, 0],
+                    backgroundColor: ['rgb(75, 192, 192)', 'rgb(255, 99, 132)']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Win/Loss Ratio'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += context.parsed.toFixed(2) + '% (' + context.raw + ' trades)';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateTable() {
+            tradeTable.innerHTML = '';
+            trades.forEach((trade, index) => {
+                let row = tradeTable.insertRow();
+                row.className = trade.result === 'win' ? 'win-row' : 'loss-row';
+                Object.keys(trade).forEach(key => {
+                    let cell = row.insertCell();
+                    cell.innerHTML = `<span class="editable" data-field="${key}">${trade[key]}</span>`;
+                });
+                let actionsCell = row.insertCell();
+                let editButtons = document.createElement('div');
+                editButtons.className = 'edit-buttons';
+                editButtons.innerHTML = `
+                    <svg class="edit-icon" onclick="editTrade(${index})" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.43746 22.1213 4.00001C22.1213 4.56257 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <button class="save-button" onclick="saveTrade(${index})">Save</button>
+                    <svg class="delete-icon"   onclick="deleteTrade(${index})" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 6H5H21" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                `;
+                actionsCell.appendChild(editButtons);
+            });
+        }
+
+        function editTrade(index) {
+            let row = tradeTable.rows[index];
+            let saveButton = row.querySelector('.save-button');
+            let editableFields = row.querySelectorAll('.editable');
+
+            editableFields.forEach(field => {
+                field.contentEditable = true;
+                field.classList.add('editing');
+            });
+
+            saveButton.style.display = 'inline-block';
+        }
+
+        function saveTrade(index) {
+            let row = tradeTable.rows[index];
+            let saveButton = row.querySelector('.save-button');
+            let editableFields = row.querySelectorAll('.editable');
+
+            editableFields.forEach(field => {
+                field.contentEditable = false;
+                field.classList.remove('editing');
+                trades[index][field.dataset.field] = field.textContent;
+            });
+
+            saveButton.style.display = 'none';
+
+            localStorage.setItem('trades', JSON.stringify(trades));
+            updateCharts();
+        }
+
+        function deleteTrade(index) {
+            trades.splice(index, 1);
+            localStorage.setItem('trades', JSON.stringify(trades));
+            updateTable();
+            updateCharts();
+        }
+
+        function updateSummary() {
+            const summaryElement = document.getElementById('tradeSummary');
+            const statsElement = document.getElementById('summaryStats');
+            
+            let totalTrades = trades.length;
+            let winCount = trades.filter(trade => trade.result === 'win').length;
+            let lossCount = totalTrades - winCount;
+            let winRate = (winCount / totalTrades) * 100 || 0;
+            let totalProfit = trades.reduce((sum, trade) => sum + parseFloat(trade.profit), 0);
+            
+            let latestTrade = trades[trades.length - 1];
+            let longestWinStreak = getLongestStreak('win');
+            let longestLossStreak = getLongestStreak('loss');
+
+            summaryElement.innerHTML = `
+                <p>You have completed ${totalTrades} trades with a win rate of ${winRate.toFixed(2)}%.</p>
+                <p>Your total profit/loss is $${totalProfit.toFixed(2)}.</p>
+                <p>Your longest win streak is ${longestWinStreak} trades, and your longest loss streak is ${longestLossStreak} trades.</p>
+                ${latestTrade ? `<p>Your most recent trade was a ${latestTrade.result} on ${latestTrade.instrument} (${latestTrade.date}).</p>` : ''}
+            `;
+
+            statsElement.innerHTML = `
+                <div class="summary-stat-item">
+                    <span class="summary-stat-label">Total Trades:</span>
+                    <span>${totalTrades}</span>
+                </div>
+                <div class="summary-stat-item">
+                    <span class="summary-stat-label">Win Rate:</span>
+                    <span>${winRate.toFixed(2)}%</span>
+                </div>
+                <div class="summary-stat-item">
+                    <span class="summary-stat-label">Total Profit/Loss:</span>
+                    <span>$${totalProfit.toFixed(2)}</span>
+                </div>
+                <div class="summary-stat-item">
+                    <span class="summary-stat-label">Longest Win Streak:</span>
+                    <span>${longestWinStreak}</span>
+                </div>
+                <div class="summary-stat-item">
+                    <span class="summary-stat-label">Longest Loss Streak:</span>
+                    <span>${longestLossStreak}</span>
+                </div>
+            `;
+        }
+
+        function getLongestStreak(type) {
+            let longestStreak = 0;
+            let currentStreak = 0;
+            for (let trade of trades) {
+                if (trade.result === type) {
+                    currentStreak++;
+                    longestStreak = Math.max(longestStreak, currentStreak);
+                } else {
+                    currentStreak = 0;
+                }
+            }
+            return longestStreak;
+        }
+
+        function updateCharts() {
+            let winCount = trades.filter(trade => trade.result === 'win').length;
+            let lossCount = trades.length - winCount;
+            let winRate = (winCount / trades.length) * 100 || 0;
+            
+            updateSummary();
+
+            // Update line chart
+            winRateChart.data.labels = trades.map((_, index) => index + 1);
+            winRateChart.data.datasets[0].data = trades.map((_, index) => {
+                let winsUpToNow = trades.slice(0, index + 1).filter(trade => trade.result === 'win').length;
+                return ((winsUpToNow / (index + 1)) * 100).toFixed(2);
+            });
+            winRateChart.update();
+
+            // Update pie chart
+            let winPercentage = (winCount / trades.length) * 100 || 0;
+            let lossPercentage = (lossCount / trades.length) * 100 || 0;
+            winRatePieChart.data.datasets[0].data = [winPercentage, lossPercentage];
+            winRatePieChart.data.labels = [`Wins: ${winPercentage.toFixed(2)}%`, `Losses: ${lossPercentage.toFixed(2)}%`];
+            winRatePieChart.update();
+        }
+
+        tradeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            let newTrade = {
+                date: document.getElementById('date').value,
+                time: document.getElementById('time').value,
+                timezone: document.getElementById('timezone').value,
+                instrument: document.getElementById('instrument').value,
+                result: document.getElementById('result').value,
+                profit: document.getElementById('profit').value,
+                notes: document.getElementById('notes').value
+            };
+            trades.push(newTrade);
+            localStorage.setItem('trades', JSON.stringify(trades));
+            updateTable();
+            updateCharts();
+            this.reset();   
+        });
+
+        toggleFormButton.addEventListener('click', function() {
+            formContainer.style.display = formContainer.style.display === 'none' ? 'block' : 'none';
+            this.textContent = formContainer.style.display === 'none' ? 'Add New Trade' : 'Close Form';
+        });
+
+        importExcelButton.addEventListener('click', function() {
+            excelFileInput.click();
+        });
+
+        excelFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet, {raw: false, dateNF: 'yyyy-mm-dd'});
+
+                json.forEach(row => {
+                    const newTrade = {
+                        date: formatExcelDate(row.Date),
+                        time: formatExcelTime(row.Time),
+                        timezone: row.Timezone,
+                        instrument: row.Instrument,
+                        result: row.Result.toLowerCase(),
+                        profit: parseFloat(row['Profit/Loss']) || 0,
+                        notes: row.Notes
+                    };
+                    trades.push(newTrade);
+                });
+
+                localStorage.setItem('trades', JSON.stringify(trades));
+                updateTable();
+                updateCharts();
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+
+        function formatExcelDate(dateString) {
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0];
+        }
+
+        function formatExcelTime(timeString) {
+            const [hours, minutes] = timeString.split(':');
+            return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+        }
+
+        updateTable();
+        updateCharts();
+    </script>
+</body>
+</html>
