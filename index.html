@@ -4,7 +4,7 @@
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Backtesting App</title>
+    <title>BACKTESTPRO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <style>
@@ -68,9 +68,6 @@
         }
         button:hover {
             opacity: 0.8;
-        }
-        #toggleForm, #importExcel {
-            margin-left: 10px;
         }
         table {
             width: 100%;
@@ -153,6 +150,56 @@
         .summary-stat-value {
             color: #333;
         }
+
+        .icon-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+            transition: transform 0.2s;
+        }
+
+        .icon-button:hover {
+            transform: scale(1.1);
+        }
+
+        .icon-button svg {
+            width: 24px;
+            height: 24px;
+            stroke: black;
+        }
+
+        .icon-text-button {
+            display: inline-flex;
+            align-items: center;
+            background-color: #f0f0f0;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .icon-text-button:hover {
+            background-color: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .icon-text-button svg {
+            width: 18px;
+            height: 18px;
+            stroke: black;
+            margin-right: 8px;
+        }
+
+        .icon-text-button span {
+            font-size: 14px;
+            font-weight: bold;
+            color: black;
+        }
+        
         .edit-buttons {
             display: flex;
             justify-content: space-around;
@@ -182,13 +229,34 @@
         <div class="header">
             <h1 class="logo">BACKTESTPRO</h1>
             <div>
-                <button id="toggleForm">Add New Trade</button>
-                <button id="importExcel">Import Excel</button>
+                <button id="toggleForm" class="icon-text-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Add New Trade</span>
+                </button>
+                <button id="importExcel" class="icon-text-button" title="Import Excel">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Import</span>
+                </button>
+                <button id="exportExcel" class="icon-text-button" title="Export Excel">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Export</span>
+                </button>
                 <input type="file" id="excelFile" accept=".xlsx, .xls" style="display: none;">
             </div>
         </div>
         
-        <div class="form-container">
+        <div id="formContainer" class="form-container">
             <form id="tradeForm">
                 <div class="form-group">
                     <label for="date">Date:</label>
@@ -221,7 +289,14 @@
                     <label for="notes">Notes:</label>
                     <input type="text" id="notes">
                 </div>
-                <button type="submit">Add Trade</button>
+                <button type="submit" class="icon-text-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    <span>Add Trade</span>
+                </button>
             </form>
         </div>
 
@@ -265,9 +340,10 @@
         const winRateCtx = document.getElementById('winRateChart').getContext('2d');
         const winRatePieCtx = document.getElementById('winRatePieChart').getContext('2d');
         const toggleFormButton = document.getElementById('toggleForm');
-        const formContainer = document.querySelector('.form-container');
+        const formContainer = document.getElementById('formContainer');
         const importExcelButton = document.getElementById('importExcel');
         const excelFileInput = document.getElementById('excelFile');
+        const exportExcelButton = document.getElementById('exportExcel');
 
         let winRateChart = new Chart(winRateCtx, {
             type: 'line',
@@ -320,7 +396,7 @@
             }
         });
 
-        let winRatePieChart = new Chart(winRatePieCtx, {
+        let  winRatePieChart = new Chart(winRatePieCtx, {
             type: 'pie',
             data: {
                 labels: ['Wins', 'Losses'],
@@ -373,7 +449,7 @@
                         <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.43746 22.1213 4.00001C22.1213 4.56257 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                     <button class="save-button" onclick="saveTrade(${index})">Save</button>
-                    <svg class="delete-icon"   onclick="deleteTrade(${index})" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="delete-icon" onclick="deleteTrade(${index})" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M3 6H5H21" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
@@ -516,12 +592,37 @@
             localStorage.setItem('trades', JSON.stringify(trades));
             updateTable();
             updateCharts();
-            this.reset();   
+            this.reset();
+            formContainer.style.display = 'none';
+            toggleFormButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Add New Trade</span>
+            `;
         });
 
         toggleFormButton.addEventListener('click', function() {
-            formContainer.style.display = formContainer.style.display === 'none' ? 'block' : 'none';
-            this.textContent = formContainer.style.display === 'none' ? 'Add New Trade' : 'Close Form';
+            if (formContainer.style.display === 'none' || formContainer.style.display === '') {
+                formContainer.style.display = 'block';
+                this.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    <span>Close Form</span>
+                `;
+            } else {
+                formContainer.style.display = 'none';
+                this.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Add New Trade</span>
+                `;
+            }
         });
 
         importExcelButton.addEventListener('click', function() {
@@ -568,6 +669,32 @@
         function formatExcelTime(timeString) {
             const [hours, minutes] = timeString.split(':');
             return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+        }
+
+        exportExcelButton.addEventListener('click', function() {
+            exportToExcel();
+        });
+
+        function exportToExcel() {
+            // Create a new workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Convert trades array to worksheet
+            const ws = XLSX.utils.json_to_sheet(trades.map(trade => ({
+                Date: trade.date,
+                Time: trade.time,
+                Timezone: trade.timezone,
+                Instrument: trade.instrument,
+                Result: trade.result.charAt(0).toUpperCase() + trade.result.slice(1),
+                'Profit/Loss': parseFloat(trade.profit),
+                Notes: trade.notes
+            })));
+            
+            // Add the worksheet to the workbook
+            XLSX.utils.book_append_sheet(wb, ws, "Trades");
+            
+            // Generate Excel file and trigger download
+            XLSX.writeFile(wb, "trades_export.xlsx");
         }
 
         updateTable();
