@@ -512,7 +512,6 @@
             summaryElement.innerHTML = `
                 <p>You have completed ${totalTrades} trades with a win rate of ${winRate.toFixed(2)}%.</p>
                 <p>Your total profit/loss is $${totalProfit.toFixed(2)}.</p>
-                <p>Your longest win streak is ${longestWinStreak} trades, and your longest loss streak is ${longestLossStreak} trades.</p>
                 ${latestTrade ? `<p>Your most recent trade was a ${latestTrade.result} on ${latestTrade.instrument} (${latestTrade.date}).</p>` : ''}
             `;
 
@@ -528,14 +527,6 @@
                 <div class="summary-stat-item">
                     <span class="summary-stat-label">Total Profit/Loss:</span>
                     <span>$${totalProfit.toFixed(2)}</span>
-                </div>
-                <div class="summary-stat-item">
-                    <span class="summary-stat-label">Longest Win Streak:</span>
-                    <span>${longestWinStreak}</span>
-                </div>
-                <div class="summary-stat-item">
-                    <span class="summary-stat-label">Longest Loss Streak:</span>
-                    <span>${longestLossStreak}</span>
                 </div>
             `;
         }
