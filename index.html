@@ -699,6 +699,15 @@
 
         updateTable();
         updateCharts();
+
+        function isMobileDevice() {
+    return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+}
+
+if (isMobileDevice()) {
+    // Redirect to mobile version of the website
+    window.location.href = "https://backtestpro.vercel.app/mobile.html"; // Replace with your mobile URL
+}
     </script>
 </body>
 </html>
